@@ -102,6 +102,19 @@ button.opt:focus-visible,.cta:focus-visible{outline:2px solid #fff;outline-offse
 .notes{margin:0;padding:12px 14px;background:var(--panel);border:1px solid var(--line);display:grid;gap:7px;list-style:none;font-size:13px;line-height:1.55;color:var(--dim)}
 .notes b{color:var(--ink)}
 .err{display:none;padding:16px;border:1px solid var(--red);font-size:13px}
+@media (max-width:600px){
+  html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+  body{padding:0}
+  header{display:none}
+  .wrap{max-width:none;margin:0;gap:0}
+  .stage{position:fixed;left:0;top:0;width:100%;height:100vh;height:100dvh;aspect-ratio:auto;border:0}
+  .hud{padding:calc(10px + env(safe-area-inset-top,0px)) calc(12px + env(safe-area-inset-right,0px)) 10px calc(12px + env(safe-area-inset-left,0px))}
+  .fuel{top:calc(38px + env(safe-area-inset-top,0px))}
+  .roll{top:calc(70px + env(safe-area-inset-top,0px))}
+  .bestT{top:calc(12px + env(safe-area-inset-top,0px))}
+  .ctl{position:fixed;left:0;right:0;bottom:calc(6px + env(safe-area-inset-bottom,0px));z-index:5;padding:0 14px;opacity:.55}
+  .err{margin:16px}
+}
 @media (prefers-reduced-motion:reduce){.cta{animation:none}}
 </style>
 
@@ -535,7 +548,9 @@ button.opt:focus-visible,.cta:focus-visible{outline:2px solid #fff;outline-offse
   var scene=new T.Scene();
   var HOR=new T.Color('#5a2f6e');
   scene.fog=new T.FogExp2(HOR,0.0026);
-  var cam=new T.PerspectiveCamera(30,0.8,0.5,900);
+  var cam=new T.PerspectiveCamera(30,0.8,0.5,900),FK=1;
+  var camUp=cam.updateProjectionMatrix.bind(cam);
+  cam.updateProjectionMatrix=function(){var f=cam.fov;cam.fov=Math.atan(Math.tan(f*Math.PI/360)*FK)*360/Math.PI;camUp();cam.fov=f;};
 
   /* ---------- 하늘 ---------- */
   var sky=new T.Group();scene.add(sky);
@@ -809,7 +824,9 @@ button.opt:focus-visible,.cta:focus-visible{outline:2px solid #fff;outline-offse
   postScene.add(new T.Mesh(new T.PlaneGeometry(2,2),post));
   var rt=null,RH=240,RW=192,hqOn=false;
   function setRes(h){
-    RH=h;RW=Math.round(h*0.8);
+    var asp=0.8;try{if(stage.clientWidth>0&&stage.clientHeight>0)asp=stage.clientWidth/stage.clientHeight;}catch(e){}
+    asp=Math.max(0.4,Math.min(1.2,asp));FK=Math.max(1,0.8/asp);
+    RH=h;RW=Math.round(h*asp);
     renderer.setSize(RW,RH,false);cam.aspect=RW/RH;cam.updateProjectionMatrix();
     if(rt)rt.dispose();
     var fl=hqOn?T.LinearFilter:T.NearestFilter;rt=new T.WebGLRenderTarget(RW,RH,{minFilter:fl,magFilter:fl,type:T.HalfFloatType,depthBuffer:true,samples:hqOn?4:0});
@@ -821,6 +838,7 @@ button.opt:focus-visible,.cta:focus-visible{outline:2px solid #fff;outline-offse
     if(save)try{localStorage.setItem('hiloop-hq',v?'1':'0');}catch(e){}
   }
   setHQ(true,false);
+  var rzT=0;window.addEventListener('resize',function(){clearTimeout(rzT);rzT=setTimeout(function(){setRes(720);},150);});
 
   /* ---------- 진행 상태 ---------- */
   function pathAt(s){
