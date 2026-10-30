@@ -563,7 +563,7 @@ button.opt:focus-visible,.cta:focus-visible{outline:2px solid #fff;outline-offse
   scene.fog=new T.FogExp2(HOR,0.0026);
   var cam=new T.PerspectiveCamera(30,0.8,0.5,900),FK=1;
   var camUp=cam.updateProjectionMatrix.bind(cam);
-  cam.updateProjectionMatrix=function(){var f=cam.fov;cam.fov=Math.atan(Math.tan(f*Math.PI/360)*FK)*360/Math.PI;camUp();cam.fov=f;};
+  cam.updateProjectionMatrix=function(){var f=cam.fov;cam.fov=Math.atan(Math.tan(f*Math.PI/360)*FK)*360/Math.PI;camUp();cam.fov=f;cam.projectionMatrix.elements[9]=0.68*(1-1/FK);cam.projectionMatrixInverse.copy(cam.projectionMatrix).invert();};
 
   /* ---------- 하늘 ---------- */
   var sky=new T.Group();scene.add(sky);
